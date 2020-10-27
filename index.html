@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <title>khaiii.js demo</title>
+    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="static/css/normalize.css">
+    <link rel="stylesheet" href="static/css/skeleton.css">
+    <link rel="stylesheet" href="static/css/main.css">
+</head>
+<body>
+<div class="container">
+    <section class="header">
+        <h2 class="title"><a href="https://github.com/puilp0502/khaiii.js">khaiii.js</a> demo</h2>
+        <a href="https://github.com/puilp0502/khaiii-demo" class="button">View Source</a>
+        <div>
+            khaiii.js는 Kakao에서 개발한 
+            <a href="https://github.com/kakao/khaiii">Khaiii</a> 한국어 형태소 분석기의 JS 이식판입니다.
+        </div>
+    </section>
+    
+    <hr>
+    <section class="contents">
+        <h4>Input</h4>
+        <form id="form">
+            <label for="message">Text</label>
+            <textarea id="message" class="u-full-width" placeholder="대한민국은 민주공화국이다." disabled></textarea>
+            <input id="send" class="button-primary" type="submit" value="LOADING" disabled>
+        </form>
+    </section>
+    <section class="contents" id="analysis-result">
+        <h4>Results</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Words</th><th>Morphemes</th>
+                </th>
+            </thead>
+            <tbody id="results">
+
+            </tbody>
+        </table>
+    </section>
+</div>
+<script src="//unpkg.com/khaiii@0.0.2/dist/khaiii.js" type="application/javascript"></script>
+<script type="application/javascript">
+    function formatMorphemeText(morphemes) {
+        var formattedText = [];
+        for (var i = 0; i < morphemes.length; i++) {
+            var morph = morphemes[i];
+            formattedText.push(morph.lex + "/" + morph.tag);
+        }
+        return formattedText.join(' + ');
+    }
+    function renderResults(words) {
+        var table = document.getElementById("results");
+        table.innerHTML = '';
+        for (var i = 0; i < words.length; i++) {
+            var word = words[i];
+            var row = document.createElement("tr");
+            row.className = "result-row";
+            var wordCell = document.createElement("td");
+            wordCell.textContent = word.word;
+            var morphemeCell = document.createElement("td");
+            morphemeCell.textContent = formatMorphemeText(word.morphs);
+            
+            row.append(wordCell);
+            row.append(morphemeCell);
+            table.append(row);
+        }
+    }
+
+    var resourceDir = "//unpkg.com/khaiii@0.0.2/dist/resources/"
+    var KhaiiiPromise = Khaiii.initialize({resourceProvider: "webfs", resourceRoot: resourceDir});
+    var DOMReady = new Promise(function(resolv) {
+        document.addEventListener('DOMContentLoaded', resolv)});
+    Promise.all([KhaiiiPromise, DOMReady]).then(function(results) {
+        var khaiii = results[0];
+        var button = document.getElementById('send');
+        var textarea = document.getElementById('message');
+        var form = document.getElementById('form');
+
+        button.disabled = false;
+        button.value = "ANALYZE";
+        textarea.disabled = false;
+        
+        form.addEventListener('submit', function(e) {
+            var value = textarea.value || textarea.placeholder;
+            console.log(value);
+            console.log(khaiii.analyze(value));
+            renderResults(khaiii.analyze(value));
+            e.preventDefault();
+            return false;
+        })
+    })
+</script>
+</body>
